@@ -96,6 +96,40 @@ const handler = createMcpHandler(async (server) => {
       };
     }
   );
+
+  // ====== 新增：可帶參數的 widget（Next.js 頁面直接嵌入） ======
+  // 這個不需要 registerResource；直接用 templateUri 指到你的頁面路徑即可。
+  server.registerTool(
+    "open_hello_widget",
+    {
+      title: "Open Hello Widget",
+      description: "Open a Hello widget page in ChatGPT that greets the user by name",
+      inputSchema: {
+        name: z.string().describe("Name shown in the widget"),
+      },
+      // 這裡只宣告能力；真正在 handler 裡動態指定 templateUri
+      _meta: {
+        "openai/resultCanProduceWidget": true,
+      },
+    },
+    async ({ name }) => {
+      const templateUri = `/hello?name=${encodeURIComponent(name)}`;
+      return {
+        content: [
+          { type: "text", text: `Opening widget for ${name}...` },
+        ],
+        structuredContent: {
+          name,
+          timestamp: new Date().toISOString(),
+        },
+        _meta: {
+          "openai/resultCanProduceWidget": true,
+          // 關鍵：動態指定要嵌入的頁面（對應 Next.js 路由）
+          "openai/templateUri": templateUri,
+        },
+      };
+    }
+  );
 });
 
 export const GET = handler;
