@@ -39,7 +39,7 @@ const handler = createMcpHandler(async (server) => {
     invoked: "Content loaded",
     html: html,
     description: "Displays the homepage content",
-    widgetDomain: "https://nextjs.org/docs",
+    widgetDomain: baseURL,
   };
   server.registerResource(
     "content-widget",
@@ -116,17 +116,22 @@ const handler = createMcpHandler(async (server) => {
       const templateUri = `/hello?name=${encodeURIComponent(name)}`;
       return {
         content: [
-          { type: "text", text: `Opening widget for ${name}...` },
+          {
+            type: "tool_result",
+            content: { ok: true, message: `Opening widget for ${name}...` },
+            metadata: {
+              "openai/resultCanProduceWidget": true,
+              "openai/templateUri": templateUri,
+  
+              // 建議加，改善 UX（可選）
+              "openai/toolInvocation/invoking": "Opening widget…",
+              "openai/toolInvocation/invoked": "Widget opened",
+  
+              // 建議加，指定你的網域，避免同源判定/載入資源問題
+              "openai/widgetDomain": baseURL,
+            },
+          },
         ],
-        structuredContent: {
-          name,
-          timestamp: new Date().toISOString(),
-        },
-        _meta: {
-          "openai/resultCanProduceWidget": true,
-          // 關鍵：動態指定要嵌入的頁面（對應 Next.js 路由）
-          "openai/templateUri": templateUri,
-        },
       };
     }
   );
