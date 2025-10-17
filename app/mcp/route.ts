@@ -111,7 +111,7 @@ const handler = createMcpHandler(async (server) => {
       _meta: { "openai/resultCanProduceWidget": true },
     },
     async ({ name }) => {
-      const templateUri = `/hello?name=${encodeURIComponent(name)}`;
+      const templateUri = `/hello?name=${name}`;
   
       return {
         // content 一樣用模板支援的 union 型別之一（text 最安全）
