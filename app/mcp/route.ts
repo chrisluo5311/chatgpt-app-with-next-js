@@ -107,34 +107,33 @@ const handler = createMcpHandler(async (server) => {
       inputSchema: {
         name: z.string().describe("Name shown in the widget"),
       },
-      // 這裡只宣告能力；真正在 handler 裡動態指定 templateUri
-      _meta: {
-        "openai/resultCanProduceWidget": true,
-      },
+      // 可留可不留：只是宣告這個工具可能會產生 widget
+      _meta: { "openai/resultCanProduceWidget": true },
     },
     async ({ name }) => {
       const templateUri = `/hello?name=${encodeURIComponent(name)}`;
+  
       return {
+        // content 一樣用模板支援的 union 型別之一（text 最安全）
         content: [
-          {
-            type: "tool_result",
-            content: { ok: true, message: `Opening widget for ${name}...` },
-            metadata: {
-              "openai/resultCanProduceWidget": true,
-              "openai/templateUri": templateUri,
-  
-              // 建議加，改善 UX（可選）
-              "openai/toolInvocation/invoking": "Opening widget…",
-              "openai/toolInvocation/invoked": "Widget opened",
-  
-              // 建議加，指定你的網域，避免同源判定/載入資源問題
-              "openai/widgetDomain": baseURL,
-            },
-          },
+          { type: "text", text: `Opening widget for ${name}...` },
         ],
+        structuredContent: {
+          name,
+          timestamp: new Date().toISOString(),
+        },
+        // 關鍵：把 widget 的宣告放在「頂層 _meta」，且用 outputTemplate
+        _meta: {
+          "openai/resultCanProduceWidget": true,
+          "openai/outputTemplate": templateUri,           // ✅ 用 outputTemplate
+          "openai/toolInvocation/invoking": "Opening widget…",
+          "openai/toolInvocation/invoked": "Widget opened",
+          "openai/widgetDomain": baseURL,                 // 建議指定你的網域
+        },
       };
     }
   );
+  
 });
 
 export const GET = handler;
